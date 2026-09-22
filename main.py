@@ -19,6 +19,8 @@ def load_data():
     df = pd.read_csv(url)
     # genre: 세로막대 기호(|)로 분리된 여러 장르 중 첫 번째 장르만 추출
     df['genre'] = df['genre'].astype(str).apply(lambda x: x.split('|')[0].strip())
+    # nation 결측치 처리
+    df['nation'] = df['nation'].fillna('미상').astype(str).apply(lambda x: x.strip())
     # 수치형 데이터 변환
     numeric_cols = ['first_scrn', 'first_show', 'first_week_audi', 'total_audi', 'days_in_top10']
     for col in numeric_cols:
@@ -234,5 +236,37 @@ st.plotly_chart(fig6, use_container_width=True)
 
 st.markdown("##### 💡 이 그래프로 알 수 있는 것")
 st.info("버블의 크기를 통해 개봉 첫 주 흥행 파급력을 비교할 수 있어, 초반 몰아치기 흥행에 성공한 작품과 후반 입소문을 통해 뒷심을 발휘하여 총 관객 수를 넓혀간 작품을 입체적으로 구분할 수 있습니다.")
+
+st.markdown("---")
+
+# ==========================================
+# 그래프 7: 제작 국가 및 장르별 영화 편수 (선버스트)
+# ==========================================
+st.subheader("7. 제작 국가 및 장르별 영화 편수 (선버스트 차트)")
+
+# 국가 -> 장르 계층 구조로 편수 집계
+nation_genre_df = df.groupby(['nation', 'genre']).size().reset_index(name='count')
+
+fig7 = px.sunburst(
+    nation_genre_df,
+    path=['nation', 'genre'],
+    values='count',
+    title="제작 국가 → 장르 계층별 영화 편수 분포",
+    color='nation',
+    color_discrete_sequence=px.colors.qualitative.Pastel
+)
+
+fig7.update_traces(
+    hovertemplate="<b>%{label}</b><br>영화 편수: %{value}편<br>비율: %{percentParent:.1%} (상위 항목 대비)<extra></extra>"
+)
+
+fig7.update_layout(
+    margin=dict(t=40, l=10, r=10, b=10)
+)
+
+st.plotly_chart(fig7, use_container_width=True)
+
+st.markdown("##### 💡 이 그래프로 알 수 있는 것")
+st.info("제작 국가별 전체 개봉작 규모와 더불어 각 국가가 어떤 장르의 영화를 주력으로 다루고 있는지 계층 구조를 통해 다각도로 파악할 수 있습니다.")
 
 st.markdown("---")
